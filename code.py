@@ -3,7 +3,7 @@ import random
 import numpy
 import matplotlib.pyplot as plt
 import pandas as pd
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+#from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 """ Calcul de la moyenne d'une liste"""
 def moyenne(x):
@@ -36,6 +36,28 @@ def RegleDeciAdl(point,covarianceInv,moy,pi):
     mulcovmoy=numpy.dot(covarianceInv,moy)
     Rd=(numpy.dot(numpy.transpose(point),mulcovmoy)-(1/2)*numpy.dot(numpy.transpose(moy),mulcovmoy)+numpy.log(pi))
     return Rd
+
+def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
+    b=numpy.transpose(moyobs0-moyobs1)
+    b=numpy.dot(b,covarianceInv)
+    b=numpy.dot(b,moyobs0+moyobs1)
+    b=b+math.log(pi0/pi1)
+    b=numpy.dot(b,-0.5)
+    
+    w=numpy.dot(covarianceInv,moyobs0-moyobs1)
+    
+    x1fd=-b/w[0]
+    x2fd=-b/w[1]
+    
+    p=[]
+    p.append(x2fd[0][0])
+    p.append(0)
+    z=[]
+    z.append(0)
+    z.append(x1fd[0][0])
+    
+    plt.plot(z,p)
+    plt.show()
 
 #1 Chargement des données et Nuage de points
 WS = pd.read_csv('dataset1.csv',',')
@@ -91,12 +113,15 @@ Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
 Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
 print("R0 pour ce point: ",Rd0)
 print("R1 pour ce point: ",Rd1)
+
+tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
+
 #Fd=((numpy.transpose(point)*covarianceInv*(moyobs0-moyobs1))-(1/2)*numpy.transpose(moyobs0-moyobs1)*covarianceInv(moyobs0+moyobs1))
 
 
-z=numpy.concatenate(obs0,obs1)
-clf = LinearDiscriminantAnalysis()
-clf.fit(z,numpy.array(y))
-LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
-  store_covariance=False, tol=0.0001)
-print(clf.predict([[-10, 10]]))
+# z=numpy.concatenate(obs0,obs1)
+# clf = LinearDiscriminantAnalysis()
+# clf.fit(z,numpy.array(y))
+# LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
+#   store_covariance=False, tol=0.0001)
+# print(clf.predict([[-10, 10]]))
