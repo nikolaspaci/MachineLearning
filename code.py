@@ -113,8 +113,8 @@ print(clf.intercept_)
 w = clf.coef_[0]
 a = -w[0] / w[1]
 xx = numpy.linspace(-10, 20)
-yy = a * xx - (clf.intercept_[0]) / w[1]
-plt.plot(xx, yy, 'g')
+yy = a * xTrain - (clf.intercept_[0]) / w[1]
+plt.plot(xTrain, yy, 'g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
 
 #Logistique
