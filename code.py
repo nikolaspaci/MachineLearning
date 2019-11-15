@@ -39,7 +39,6 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     b=numpy.dot(b,-0.5)
 
     w=numpy.dot(covarianceInv,moyobs0-moyobs1)
-
     x1fd=-b/w[0]
     x2fd=-b/w[1]
 
@@ -108,7 +107,14 @@ clf = LinearDiscriminantAnalysis()
 clf.fit(xTrain,yTrain)
 LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
   store_covariance=False, tol=0.0001)
-#np.dot(clf.coef_, x) - clf.intercept_ = 0
+print(clf.coef_)
+print(clf.intercept_)
+#yy=np.dot(X.T,clf.coef_) - clf.intercept_ = 0
+w = clf.coef_[0]
+a = -w[0] / w[1]
+xx = numpy.linspace(-10, 20)
+yy = a * xx - (clf.intercept_[0]) / w[1]
+plt.plot(xx, yy, 'g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
 
 #Logistique
