@@ -56,7 +56,7 @@ WS = pd.read_csv('dataset1.csv',',')
 plt.title("Nuage de points des données extraites")
 plt.xlabel('x1')
 plt.ylabel('x2')
-plt.scatter(WS[['X1']],WS[['X2']],color='red')
+plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
 
 #2 ADL
 obs0=WS.loc[WS['y']==0.0,['X1','X2']]
@@ -114,7 +114,7 @@ plt.plot(xTrain, yy, label='Frontiere décision ADL sklearn',color='g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
 
 #Logistique
-clflogis = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial').fit(xTrain,yTrain)
+clflogis = LogisticRegression(random_state=0,solver='liblinear').fit(xTrain,yTrain)
 w = clflogis.coef_[0]
 a = -w[0] / w[1]
 yy = a * xTrain - (clflogis.intercept_[0]) / w[1]
