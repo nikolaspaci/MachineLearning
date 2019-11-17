@@ -20,7 +20,6 @@ def moyenne(x):
 
 
 """ Calcul somme covariances des classes"""
-#covarianceSomme
 def Sommecovariance(X,Y):
     z=(((len(X)*X)+(len(Y)*Y))/(len(X)+len(Y)))
     return z
@@ -31,6 +30,7 @@ def RegleDeciAdl(point,covarianceInv,moy,pi):
     Rd=(numpy.dot(numpy.transpose(point),mulcovmoy)-(1/2)*numpy.dot(numpy.transpose(moy),mulcovmoy)+numpy.log(pi))
     return Rd
 
+"""Tracer de la frontière de décision"""
 def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     b=numpy.transpose(moyobs0-moyobs1)
     b=numpy.dot(b,covarianceInv)
@@ -50,7 +50,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     z.append(x1fd[0][0])
     plt.plot(z,p,label='Frontiere décision ADL réalisé')
 
-#1 Chargement des données et Nuage de points
+##1 Chargement des données et Nuage de points
 WS = pd.read_csv('dataset1.csv',',')
 
 plt.title("Nuage de points des données extraites")
@@ -58,7 +58,7 @@ plt.xlabel('x1')
 plt.ylabel('x2')
 plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
 
-#2 ADL
+##2 ADL
 obs0=WS.loc[WS['y']==0.0,['X1','X2']]
 obs1=WS.loc[WS['y']==1.0,['X1','X2']]
 
@@ -66,40 +66,40 @@ moyobs0=moyenne(obs0)
 moyobs1=moyenne(obs1)
 pi0=len(obs0)/(len(WS))
 pi1=len(obs1)/(len(WS))
-print('moyenne obs0',moyobs0)
-print('moyenne obs1',moyobs1)
+#print('moyenne obs0',moyobs0)
+#print('moyenne obs1',moyobs1)
 
 covObs0=numpy.cov(obs0.T)
 covObs1=numpy.cov(obs1.T)
-print(covObs0)
-print(covObs1)
+#print(covObs0)
+#print(covObs1)
 
 covSomme=Sommecovariance(covObs0,covObs1)
-print('sommeCov',covSomme)
+#print('sommeCov',covSomme)
 
 """ Calcul de la covariance inversée"""
 covarianceInv=numpy.linalg.inv(covSomme)
-print("matrice cov inversé",covarianceInv)
+#print("matrice cov inversé",covarianceInv)
 #print(covarianceInv.dot(covSomme))
 
-#3
+##3
 """Frontiere decision"""
 tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
 
 """Prediction du point"""
 point=numpy.array([-10,10])
+plt.scatter(-10,10,c='r')
 Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
 Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
-print("R0 pour ce point: ",Rd0)
-print("R1 pour ce point: ",Rd1)
+#rint("R0 pour ce point: ",Rd0)
+#print("R1 pour ce point: ",Rd1)
 
 if Rd0>Rd1:
     print("On prédit la classe 0")
 else:
     print("on prédit la classe 1")
 
-#4
-"""Modele SKLearn"""
+##4
 #LDA
 xTrain=WS[['X1','X2']]
 yTrain=WS['y']
