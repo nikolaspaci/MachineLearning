@@ -48,7 +48,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     z=[]
     z.append(0)
     z.append(x1fd[0][0])
-    plt.plot(z,p)
+    plt.plot(z,p,label='Frontiere décision ADL réalisé')
 
 #1 Chargement des données et Nuage de points
 WS = pd.read_csv('dataset1.csv',',')
@@ -80,7 +80,7 @@ print('sommeCov',covSomme)
 """ Calcul de la covariance inversée"""
 covarianceInv=numpy.linalg.inv(covSomme)
 print("matrice cov inversé",covarianceInv)
-print(covarianceInv.dot(covSomme))
+#print(covarianceInv.dot(covSomme))
 
 #3
 """Frontiere decision"""
@@ -107,18 +107,18 @@ clf = LinearDiscriminantAnalysis()
 clf.fit(xTrain,yTrain)
 LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
   store_covariance=False, tol=0.0001)
-print(clf.coef_)
-print(clf.intercept_)
-#yy=np.dot(X.T,clf.coef_) - clf.intercept_ = 0
 w = clf.coef_[0]
 a = -w[0] / w[1]
-xx = numpy.linspace(-10, 20)
 yy = a * xTrain - (clf.intercept_[0]) / w[1]
-plt.plot(xTrain, yy, 'g')
+plt.plot(xTrain, yy, label='Frontiere décision ADL sklearn',color='g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
 
 #Logistique
 clflogis = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial').fit(xTrain,yTrain)
+w = clflogis.coef_[0]
+a = -w[0] / w[1]
+yy = a * xTrain - (clflogis.intercept_[0]) / w[1]
+plt.plot(xTrain, yy,label='Frontiere décision logistique sklearn',color= 'y')
 print("logistique de sklearn predit la classe : ",clflogis.predict([[-10, 10]]))
 
 plt.show()
