@@ -41,7 +41,6 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     b=numpy.dot(b,-0.5)
 
     w=numpy.dot(covarianceInv,moyobs0-moyobs1)
-    print('w',w)
     x1fd=-b/w[0]
     x2fd=-b/w[1]
 
@@ -54,7 +53,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     plt.plot(z,p,label='Frontiere décision ADL réalisé')
 
 ##1 Chargement des données et Nuage de points
-WS = pd.read_csv('dataset2.csv',',')
+WS = pd.read_csv('dataset1.csv',',')
 
 plt.title("Nuage de points des données extraites")
 plt.xlabel('x1')
@@ -78,11 +77,11 @@ covObs1=numpy.cov(obs1.T)
 #print(covObs1)
 
 covSomme=Sommecovariance(covObs0,covObs1)
-print('sommeCov',covSomme)
+#print('sommeCov',covSomme)
 
 """ Calcul de la covariance inversée"""
 covarianceInv=numpy.linalg.pinv(covSomme)
-print("matrice cov inversé",covarianceInv)
+#print("matrice cov inversé",covarianceInv)
 #print(covarianceInv.dot(covSomme))
 
 ##3
@@ -117,7 +116,7 @@ plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
 scoreldaskl=cross_val_score(clf,X,yTrain,cv=LeaveOneOut())
 print('Mean Accuracy lda skl',sum(scoreldaskl)/len(scoreldaskl))
-print(scoreldaskl)
+#print(scoreldaskl)
 
 #Logistique
 clflogis = LogisticRegression(random_state=0,solver='liblinear')
