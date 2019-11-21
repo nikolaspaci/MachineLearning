@@ -52,6 +52,41 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     z.append(x1fd[0][0])
     plt.plot(z,p,label='Frontiere décision ADL réalisé')
 
+"""ADL"""
+def estimerParamAdl(obs0,obs1):
+    moyobs0=moyenne(obs0)
+    moyobs1=moyenne(obs1)
+    pi0=len(obs0)/(len(WS))
+    pi1=len(obs1)/(len(WS))
+    
+    covObs0=numpy.cov(obs0.T)
+    covObs1=numpy.cov(obs1.T)
+    
+    covSomme=Sommecovariance(covObs0,covObs1)
+    covarianceInv=numpy.linalg.pinv(covSomme)
+    return moyobs0,moyobs1,pi0,pi1,covarianceInv
+
+"""Validation croisée LOO"""
+def validationCroisé(obs0,obs1):
+    nbObservation=len(obs0)+len(obs1)
+    tn=0
+    tp=0
+    
+    for i in range(0,len(obs0)) :
+        obsMoinsUn=obs0.drop(obs0.index[i])
+        moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obsMoinsUn,obs1)
+        point=numpy.array([obs0.iat[i,0],obs0.iat[i,1]])
+        if RegleDeciAdl(point,covarianceInv,moyobs1,pi1)<RegleDeciAdl(point,covarianceInv,moyobs0,pi0) :
+            tn+=1
+    for i in range(0,len(obs1)) :
+        obsMoinsUn=obs1.drop(obs1.index[i])
+        moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obsMoinsUn)
+        point=numpy.array([obs1.iat[i,0],obs1.iat[i,1]])
+        if RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1) :
+            tp+=1
+            
+    return (tp+tn)/nbObservation
+
 ##1 Chargement des données et Nuage de points
 WS = pd.read_csv('dataset1.csv',',')
 
@@ -100,6 +135,7 @@ if Rd0>Rd1:
     print("On prédit la classe 0")
 else:
     print("on prédit la classe 1")
+print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 
 ##4
 #LDA
