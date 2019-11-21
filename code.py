@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import LeaveOneOut
+from sklearn.model_selection import cross_val_score
 
 """ Calcul de la moyenne d'une liste"""
 def moyenne(x):
@@ -39,6 +41,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     b=numpy.dot(b,-0.5)
 
     w=numpy.dot(covarianceInv,moyobs0-moyobs1)
+    print('w',w)
     x1fd=-b/w[0]
     x2fd=-b/w[1]
 
@@ -51,7 +54,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     plt.plot(z,p,label='Frontiere décision ADL réalisé')
 
 ##1 Chargement des données et Nuage de points
-WS = pd.read_csv('dataset1.csv',',')
+WS = pd.read_csv('dataset2.csv',',')
 
 plt.title("Nuage de points des données extraites")
 plt.xlabel('x1')
@@ -75,11 +78,11 @@ covObs1=numpy.cov(obs1.T)
 #print(covObs1)
 
 covSomme=Sommecovariance(covObs0,covObs1)
-#print('sommeCov',covSomme)
+print('sommeCov',covSomme)
 
 """ Calcul de la covariance inversée"""
-covarianceInv=numpy.linalg.inv(covSomme)
-#print("matrice cov inversé",covarianceInv)
+covarianceInv=numpy.linalg.pinv(covSomme)
+print("matrice cov inversé",covarianceInv)
 #print(covarianceInv.dot(covSomme))
 
 ##3
@@ -91,8 +94,8 @@ point=numpy.array([-10,10])
 plt.scatter(-10,10,c='r')
 Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
 Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
-#rint("R0 pour ce point: ",Rd0)
-#print("R1 pour ce point: ",Rd1)
+print("R0 pour ce point: ",Rd0)
+print("R1 pour ce point: ",Rd1)
 
 if Rd0>Rd1:
     print("On prédit la classe 0")
@@ -101,24 +104,29 @@ else:
 
 ##4
 #LDA
-xTrain=WS[['X1','X2']]
+X=WS[['X1','X2']]
 yTrain=WS['y']
 clf = LinearDiscriminantAnalysis()
-clf.fit(xTrain,yTrain)
+clf.fit(X,yTrain)
 LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
-  store_covariance=False, tol=0.0001)
+store_covariance=False, tol=0.0001)
 w = clf.coef_[0]
 a = -w[0] / w[1]
-yy = a * xTrain - (clf.intercept_[0]) / w[1]
-plt.plot(xTrain, yy, label='Frontiere décision ADL sklearn',color='g')
+yy = a * X - (clf.intercept_[0]) / w[1]
+plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='g')
 print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
+scoreldaskl=cross_val_score(clf,X,yTrain,cv=LeaveOneOut())
+print('Mean Accuracy lda skl',sum(scoreldaskl)/len(scoreldaskl))
+print(scoreldaskl)
 
 #Logistique
-clflogis = LogisticRegression(random_state=0,solver='liblinear').fit(xTrain,yTrain)
+clflogis = LogisticRegression(random_state=0,solver='liblinear')
+clflogis.fit(X,yTrain)
 w = clflogis.coef_[0]
 a = -w[0] / w[1]
-yy = a * xTrain - (clflogis.intercept_[0]) / w[1]
-plt.plot(xTrain, yy,label='Frontiere décision logistique sklearn',color= 'y')
+yy = a * X - (clflogis.intercept_[0]) / w[1]
+plt.plot(X, yy,label='Frontiere décision logistique sklearn',color= 'y')
 print("logistique de sklearn predit la classe : ",clflogis.predict([[-10, 10]]))
-
+scorelogisskl=cross_val_score(clflogis,X,yTrain,cv=LeaveOneOut())
+print('Mean accuracy logistique skl',sum(scorelogisskl)/len(scorelogisskl))
 plt.show()
