@@ -58,20 +58,36 @@ def estimerParamAdl(obs0,obs1):
     moyobs1=moyenne(obs1)
     pi0=len(obs0)/(len(WS))
     pi1=len(obs1)/(len(WS))
-    
+
     covObs0=numpy.cov(obs0.T)
     covObs1=numpy.cov(obs1.T)
-    
+
     covSomme=Sommecovariance(covObs0,covObs1)
     covarianceInv=numpy.linalg.pinv(covSomme)
     return moyobs0,moyobs1,pi0,pi1,covarianceInv
+
+def sepObs(WS):
+    obs0=WS.loc[WS['y']==0.0,['X1','X2']]
+    obs1=WS.loc[WS['y']==1.0,['X1','X2']]
+    return obs0,obs1
+
+def predictLDA(point):
+    plt.scatter(point[0],point[1],c='r')
+    Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
+    Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
+    print("R0 pour ce point: ",Rd0)
+    print("R1 pour ce point: ",Rd1)
+    if Rd0>Rd1:
+        print("On prédit la classe 0")
+    else:
+        print("on prédit la classe 1")
 
 """Validation croisée LOO"""
 def validationCroisé(obs0,obs1):
     nbObservation=len(obs0)+len(obs1)
     tn=0
     tp=0
-    
+
     for i in range(0,len(obs0)) :
         obsMoinsUn=obs0.drop(obs0.index[i])
         moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obsMoinsUn,obs1)
@@ -84,11 +100,44 @@ def validationCroisé(obs0,obs1):
         point=numpy.array([obs1.iat[i,0],obs1.iat[i,1]])
         if RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1) :
             tp+=1
-            
+
     return (tp+tn)/nbObservation
 
+def sklLDAPredict(WS,point):
+    X=WS[['X1','X2']]
+    Y=WS['y']
+
+    """prediction"""
+    clf = LinearDiscriminantAnalysis()
+    clf.fit(X,Y)
+    LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
+    store_covariance=False, tol=0.0001)
+    w = clf.coef_[0]
+    a = -w[0] / w[1]
+    yy = a * X - (clf.intercept_[0]) / w[1]
+    plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='g')
+    print("Lda de sklearn predit la classe : ",clf.predict(point))
+
+    """Validation croisée"""
+    scoreldaskl=cross_val_score(clf,X,Y,cv=LeaveOneOut())
+    print('Mean Accuracy lda skl',sum(scoreldaskl)/len(scoreldaskl))
+    #print(scoreldaskl)
+
+def sklLogisticPredict(WS,point):
+    X=WS[['X1','X2']]
+    Y=WS['y']
+    clflogis = LogisticRegression(random_state=0,solver='liblinear')
+    clflogis.fit(X,Y)
+    w = clflogis.coef_[0]
+    a = -w[0] / w[1]
+    yy = a * X - (clflogis.intercept_[0]) / w[1]
+    plt.plot(X, yy,label='Frontiere décision logistique sklearn',color= 'y')
+    print("logistique de sklearn predit la classe : ",clflogis.predict(point))
+    scorelogisskl=cross_val_score(clflogis,X,Y,cv=LeaveOneOut())
+    print('Mean accuracy logistique skl',sum(scorelogisskl)/len(scorelogisskl))
+
 ##1 Chargement des données et Nuage de points
-WS = pd.read_csv('dataset1.csv',',')
+WS = pd.read_csv('dataset3''.csv',',')
 
 plt.title("Nuage de points des données extraites")
 plt.xlabel('x1')
@@ -96,28 +145,8 @@ plt.ylabel('x2')
 plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
 
 ##2 ADL
-obs0=WS.loc[WS['y']==0.0,['X1','X2']]
-obs1=WS.loc[WS['y']==1.0,['X1','X2']]
-
-moyobs0=moyenne(obs0)
-moyobs1=moyenne(obs1)
-pi0=len(obs0)/(len(WS))
-pi1=len(obs1)/(len(WS))
-#print('moyenne obs0',moyobs0)
-#print('moyenne obs1',moyobs1)
-
-covObs0=numpy.cov(obs0.T)
-covObs1=numpy.cov(obs1.T)
-#print(covObs0)
-#print(covObs1)
-
-covSomme=Sommecovariance(covObs0,covObs1)
-#print('sommeCov',covSomme)
-
-""" Calcul de la covariance inversée"""
-covarianceInv=numpy.linalg.pinv(covSomme)
-#print("matrice cov inversé",covarianceInv)
-#print(covarianceInv.dot(covSomme))
+obs0,obs1=sepObs(WS)
+moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
 
 ##3
 """Frontiere decision"""
@@ -125,43 +154,16 @@ tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
 
 """Prediction du point"""
 point=numpy.array([-10,10])
-plt.scatter(-10,10,c='r')
-Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
-Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
-print("R0 pour ce point: ",Rd0)
-print("R1 pour ce point: ",Rd1)
-
-if Rd0>Rd1:
-    print("On prédit la classe 0")
-else:
-    print("on prédit la classe 1")
-print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
+predictLDA(point)
 
 ##4
-#LDA
-X=WS[['X1','X2']]
-yTrain=WS['y']
-clf = LinearDiscriminantAnalysis()
-clf.fit(X,yTrain)
-LinearDiscriminantAnalysis(n_components=None, priors=None, shrinkage=None, solver='svd',
-store_covariance=False, tol=0.0001)
-w = clf.coef_[0]
-a = -w[0] / w[1]
-yy = a * X - (clf.intercept_[0]) / w[1]
-plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='g')
-print("Lda de sklearn predit la classe : ",clf.predict([[-10, 10]]))
-scoreldaskl=cross_val_score(clf,X,yTrain,cv=LeaveOneOut())
-print('Mean Accuracy lda skl',sum(scoreldaskl)/len(scoreldaskl))
-#print(scoreldaskl)
+#LDA CODE
+print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 
-#Logistique
-clflogis = LogisticRegression(random_state=0,solver='liblinear')
-clflogis.fit(X,yTrain)
-w = clflogis.coef_[0]
-a = -w[0] / w[1]
-yy = a * X - (clflogis.intercept_[0]) / w[1]
-plt.plot(X, yy,label='Frontiere décision logistique sklearn',color= 'y')
-print("logistique de sklearn predit la classe : ",clflogis.predict([[-10, 10]]))
-scorelogisskl=cross_val_score(clflogis,X,yTrain,cv=LeaveOneOut())
-print('Mean accuracy logistique skl',sum(scorelogisskl)/len(scorelogisskl))
+#LDA SKLEARN
+point=[[-10, 10]]
+sklLDAPredict(WS,point)
+#Logistique SKLEARN
+sklLogisticPredict(WS,point)
+
 plt.show()
