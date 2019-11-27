@@ -50,7 +50,7 @@ def tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv):
     z=[]
     z.append(0)
     z.append(x1fd[0][0])
-    plt.plot(z,p,label='Frontiere décision ADL réalisé')
+    plt.plot(z,p,label='Frontiere décision ADL réalisé',color='green')
 
 """ADL"""
 def estimerParamAdl(obs0,obs1):
@@ -72,7 +72,7 @@ def sepObs(WS):
     return obs0,obs1
 
 def predictLDA(point):
-    plt.scatter(point[0],point[1],c='r')
+    plt.scatter(point[0],point[1],c='r',label='point à prédire')
     Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
     Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
     print("R0 pour ce point: ",Rd0)
@@ -115,13 +115,13 @@ def sklLDAPredict(WS,point):
     w = clf.coef_[0]
     a = -w[0] / w[1]
     yy = a * X - (clf.intercept_[0]) / w[1]
-    plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='g')
     print("Lda de sklearn predit la classe : ",clf.predict(point))
-
+    plt.plot(X, yy, label='Frontiere décision ADL sklearn',color='orange')
     """Validation croisée"""
     scoreldaskl=cross_val_score(clf,X,Y,cv=LeaveOneOut())
     print('Mean Accuracy lda skl',sum(scoreldaskl)/len(scoreldaskl))
     #print(scoreldaskl)
+
 
 def sklLogisticPredict(WS,point):
     X=WS[['X1','X2']]
@@ -131,35 +131,87 @@ def sklLogisticPredict(WS,point):
     w = clflogis.coef_[0]
     a = -w[0] / w[1]
     yy = a * X - (clflogis.intercept_[0]) / w[1]
-    plt.plot(X, yy,label='Frontiere décision logistique sklearn',color= 'y')
+    plt.plot(X, yy,label='Frontiere décision logistique sklearn',color='blue')
     print("logistique de sklearn predit la classe : ",clflogis.predict(point))
     scorelogisskl=cross_val_score(clflogis,X,Y,cv=LeaveOneOut())
     print('Mean accuracy logistique skl',sum(scorelogisskl)/len(scorelogisskl))
-
+    
+####DATASET1
 ##1 Chargement des données et Nuage de points
-WS = pd.read_csv('dataset3''.csv',',')
-
-plt.title("Nuage de points des données extraites")
+print("#######DATASET1#######")
+WS = pd.read_csv('dataset1.csv',',')
+plt.figure(1)
+plt.title("Nuage de points des données du DataSet1")
 plt.xlabel('x1')
 plt.ylabel('x2')
 plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
-
 ##2 ADL
 obs0,obs1=sepObs(WS)
 moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
-
 ##3
 """Frontiere decision"""
 tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
-
 """Prediction du point"""
-point=numpy.array([-10,10])
-predictLDA(point)
-
+pointpredictarray=numpy.array([-10,10])
+predictLDA(pointpredictarray)
 ##4
 #LDA CODE
 print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
+#LDA SKLEARN
+point=[[-10, 10]]
+sklLDAPredict(WS,point)
+#Logistique SKLEARN
+sklLogisticPredict(WS,point)
 
+####DATASET2
+##1 Chargement des données et Nuage de points
+print("#######DATASET2#######")
+WS = pd.read_csv('dataset2.csv',',')
+plt.figure(2)
+plt.title("Nuage de points des données du DataSet2")
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
+##2 ADL
+obs0,obs1=sepObs(WS)
+moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
+##3
+"""Frontiere decision"""
+tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
+"""Prediction du point"""
+pointpredictarray=numpy.array([-10,10])
+predictLDA(pointpredictarray)
+##4
+#LDA CODE
+print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
+#LDA SKLEARN
+point=[[-10, 10]]
+sklLDAPredict(WS,point)
+#Logistique SKLEARN
+sklLogisticPredict(WS,point)
+
+
+####DATASET3
+##1 Chargement des données et Nuage de points
+print("#######DATASET3#######")
+WS = pd.read_csv('dataset3.csv',',')
+plt.figure(3)
+plt.title("Nuage de points des données du DataSet3")
+plt.xlabel('x1')
+plt.ylabel('x2')
+plt.scatter(WS['X1'],WS['X2'],c=WS['y'])
+##2 ADL
+obs0,obs1=sepObs(WS)
+moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
+##3
+"""Frontiere decision"""
+tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
+"""Prediction du point"""
+pointpredictarray=numpy.array([-10,10])
+predictLDA(pointpredictarray)
+##4
+#LDA CODE
+print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 #LDA SKLEARN
 point=[[-10, 10]]
 sklLDAPredict(WS,point)
