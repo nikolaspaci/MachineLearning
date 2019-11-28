@@ -11,13 +11,9 @@ from sklearn.model_selection import cross_val_score
 """ Calcul de la moyenne d'une liste"""
 def moyenne(x):
     moy=[]
-    moyX1=0
-    moyX2=0
-    for index,rows in x.iterrows():
-        moyX1+=rows['X1']
-        moyX2+=rows['X2']
-    moy.append([moyX1/len(x)])
-    moy.append([moyX2/len(x)])
+    xmeans=x.mean()
+    for index,mean in xmeans.iteritems():
+        moy.append([mean])
     return numpy.array(moy)
 
 
@@ -72,7 +68,6 @@ def sepObs(WS):
     return obs0,obs1
 
 def predictLDA(point):
-    plt.scatter(point[0],point[1],c='r',label='point à prédire')
     Rd0=RegleDeciAdl(point,covarianceInv,moyobs0,pi0)
     Rd1=RegleDeciAdl(point,covarianceInv,moyobs1,pi1)
     print("R0 pour ce point: ",Rd0)
@@ -103,10 +98,7 @@ def validationCroisé(obs0,obs1):
 
     return (tp+tn)/nbObservation
 
-def sklLDAPredict(WS,point):
-    X=WS[['X1','X2']]
-    Y=WS['y']
-
+def sklLDAPredict(X,Y,point):
     """prediction"""
     clf = LinearDiscriminantAnalysis()
     clf.fit(X,Y)
@@ -123,9 +115,7 @@ def sklLDAPredict(WS,point):
     #print(scoreldaskl)
 
 
-def sklLogisticPredict(WS,point):
-    X=WS[['X1','X2']]
-    Y=WS['y']
+def sklLogisticPredict(X,Y,point):
     clflogis = LogisticRegression(random_state=0,solver='liblinear')
     clflogis.fit(X,Y)
     w = clflogis.coef_[0]
@@ -135,7 +125,23 @@ def sklLogisticPredict(WS,point):
     print("logistique de sklearn predit la classe : ",clflogis.predict(point))
     scorelogisskl=cross_val_score(clflogis,X,Y,cv=LeaveOneOut())
     print('Mean accuracy logistique skl',sum(scorelogisskl)/len(scorelogisskl))
-    
+
+
+####Analyse d'un set de données
+print("Jeu de donées")
+WS = pd.read_csv('heart.csv',',')
+obs0=WS.loc[WS['target']==0,WS.columns!= 'target']
+obs1=WS.loc[WS['target']==1,WS.columns!= 'target']
+y=WS['target']
+pi0=len(obs0)/(len(WS))
+pi1=len(obs1)/(len(WS))
+covObs0=numpy.cov(obs0.T)
+covObs1=numpy.cov(obs1.T)
+covSomme=Sommecovariance(covObs0,covObs1)
+covarianceInv=numpy.linalg.pinv(covSomme)
+moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
+print('Mean Accuracy Donnée', validationCroisé(obs0,obs1))
+
 ####DATASET1
 ##1 Chargement des données et Nuage de points
 print("#######DATASET1#######")
@@ -153,15 +159,18 @@ moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
 tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
 """Prediction du point"""
 pointpredictarray=numpy.array([-10,10])
+plt.scatter(pointpredictarray[0],pointpredictarray[1],c='r',label='point à prédire')
 predictLDA(pointpredictarray)
 ##4
 #LDA CODE
 print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 #LDA SKLEARN
+X=WS[['X1','X2']]
+Y=WS['y']
 point=[[-10, 10]]
-sklLDAPredict(WS,point)
+sklLDAPredict(X,Y,point)
 #Logistique SKLEARN
-sklLogisticPredict(WS,point)
+sklLogisticPredict(X,Y,point)
 
 ####DATASET2
 ##1 Chargement des données et Nuage de points
@@ -180,15 +189,18 @@ moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
 tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
 """Prediction du point"""
 pointpredictarray=numpy.array([-10,10])
+plt.scatter(pointpredictarray[0],pointpredictarray[1],c='r',label='point à prédire')
 predictLDA(pointpredictarray)
 ##4
 #LDA CODE
 print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 #LDA SKLEARN
+X=WS[['X1','X2']]
+Y=WS['y']
 point=[[-10, 10]]
-sklLDAPredict(WS,point)
+sklLDAPredict(X,Y,point)
 #Logistique SKLEARN
-sklLogisticPredict(WS,point)
+sklLogisticPredict(X,Y,point)
 
 
 ####DATASET3
@@ -208,14 +220,17 @@ moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
 tracerFrontiereDecision(moyobs0,moyobs1,pi0,pi1,covarianceInv)
 """Prediction du point"""
 pointpredictarray=numpy.array([-10,10])
+plt.scatter(pointpredictarray[0],pointpredictarray[1],c='r',label='point à prédire')
 predictLDA(pointpredictarray)
 ##4
 #LDA CODE
 print('Mean Accuracy lda codé', validationCroisé(obs0,obs1))
 #LDA SKLEARN
+X=WS[['X1','X2']]
+Y=WS['y']
 point=[[-10, 10]]
-sklLDAPredict(WS,point)
+sklLDAPredict(X,Y,point)
 #Logistique SKLEARN
-sklLogisticPredict(WS,point)
+sklLogisticPredict(X,Y,point)
 
 plt.show()
