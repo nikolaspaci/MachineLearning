@@ -86,13 +86,13 @@ def validationCroisé(obs0,obs1):
     for i in range(0,len(obs0)) :
         obsMoinsUn=obs0.drop(obs0.index[i])
         moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obsMoinsUn,obs1)
-        point=numpy.array([obs0.iat[i,0],obs0.iat[i,1]])
+        point=numpy.array([obs0.iloc[i,:]]).T
         if RegleDeciAdl(point,covarianceInv,moyobs1,pi1)<RegleDeciAdl(point,covarianceInv,moyobs0,pi0) :
             tn+=1
     for i in range(0,len(obs1)) :
         obsMoinsUn=obs1.drop(obs1.index[i])
         moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obsMoinsUn)
-        point=numpy.array([obs1.iat[i,0],obs1.iat[i,1]])
+        point=numpy.array([obs1.iloc[i,:]]).T
         if RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1) :
             tp+=1
 
