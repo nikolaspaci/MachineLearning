@@ -130,7 +130,7 @@ def sklLogisticPredict(X,Y,point):
 ####Analyse d'un set de données
 print("Jeu de donées")
 WS = pd.read_csv('online_shoppers_intention.csv',',')
-
+#Nettoyage des jeux de donées
 onehot = pd.get_dummies(WS['Month'])
 WS = WS.drop('Month',axis = 1)
 WS = WS.join(onehot)
@@ -140,11 +140,12 @@ WS = WS.drop('VisitorType',axis = 1)
 WS = WS.join(onehot)
 WS['Weekend']=WS['Weekend'].map({True: 1, False: 0})
 export_csv = WS.to_csv (r'C:\Users\nikol\Desktop\export_dataframe.csv', index = None, header=True)
+
+#print("NAN VALUE",WS.isnull().any())
+WS=WS.dropna() #supp nul
 obs0=WS.loc[WS['Revenue']==True,WS.columns!= 'Revenue']
 obs1=WS.loc[WS['Revenue']==False,WS.columns!= 'Revenue']
-y=WS['Revenue']
-obs0.info()
-
+#y=WS['Revenue']
 pi0=len(obs0)/(len(WS))
 pi1=len(obs1)/(len(WS))
 covObs0=numpy.cov(obs0.T)
