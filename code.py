@@ -139,7 +139,6 @@ onehot = pd.get_dummies(WS['VisitorType'])
 WS = WS.drop('VisitorType',axis = 1)
 WS = WS.join(onehot)
 WS['Weekend']=WS['Weekend'].map({True: 1, False: 0})
-export_csv = WS.to_csv (r'C:\Users\nikol\Desktop\export_dataframe.csv', index = None, header=True)
 
 #print("NAN VALUE",WS.isnull().any())
 WS=WS.dropna() #supp nul
