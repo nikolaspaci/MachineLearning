@@ -7,6 +7,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import LeaveOneOut
 from sklearn.model_selection import cross_val_score
+from math import *
 
 """ Calcul de la moyenne"""
 def moyenne(x):
@@ -79,7 +80,7 @@ def predictLDA(point):
         print("Notre ADL prédit la classe 1")
 
 """Validation croisée Leave One Out"""
-def validationCroisée(obs0,obs1):
+def validationCroiseeLOO(obs0,obs1):
     nbObservation=len(obs0)+len(obs1)
     tn=0
     tp=0
@@ -98,6 +99,70 @@ def validationCroisée(obs0,obs1):
             tp+=1
 
     return ((tp+tn)/nbObservation)*100
+
+def faireBlockTailleSemblable(nbBlock,nbObservation) :
+    tailleBlock=floor(nbObservation/nbBlock)
+    reste=nbObservation-(tailleBlock*nbBlock)
+    tailleParBlock=[]
+    
+    for i in range(0,nbBlock):
+        tailleParBlock.append(tailleBlock)
+    
+    cpt=0
+    while(reste>0):
+        tailleParBlock[cpt]+=1
+        reste-=1
+        cpt=(cpt+1)%nbBlock
+    
+    return tailleParBlock
+
+def validationCroisee(WS,nbBlock) :
+    nbObservation=len(WS.index)
+    tailleChaqueBlock=faireBlockTailleSemblable(nbBlock,nbObservation)
+    nbDonneesPasseEnTest=0
+    tn=0
+    tp=0
+    fn=0
+    fp=0
+    
+    #Chaque block passe 1 fois en test et (nbBlock-1) fois en apprentissage
+    for i in range(0,nbBlock) :
+        #Séparation données apprentissage/test
+        WSApprentissage=WS.copy()
+        WSTest=WS.copy()
+        WSApprentissage.drop(WSApprentissage.index.values[nbDonneesPasseEnTest:nbDonneesPasseEnTest+tailleChaqueBlock[i]],inplace=True)
+        WSTest.drop(WSApprentissage.index.values,inplace=True)
+        
+        #Séparation par classe des données d'apprentissage
+        obs0=WSApprentissage.loc[WSApprentissage['Revenue']==True,WSApprentissage.columns!= 'Revenue']
+        obs1=WSApprentissage.loc[WSApprentissage['Revenue']==False,WSApprentissage.columns!= 'Revenue']
+        moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
+        
+        #Séparation par classe des données de test
+        ensemblePoint0=WSTest.loc[WSTest['Revenue']==True,WSTest.columns!= 'Revenue']
+        ensemblePoint1=WSTest.loc[WSTest['Revenue']==False,WSTest.columns!= 'Revenue']
+        
+        #Calcule des positifs
+        for j in range(0,len(ensemblePoint0)):
+            point=numpy.array([ensemblePoint0.iloc[j,:]]).T
+            if(RegleDeciAdl(point,covarianceInv,moyobs0,pi0)>RegleDeciAdl(point,covarianceInv,moyobs1,pi1)):
+                tp+=1
+            else :
+                fn+=1
+        
+        #Calcule des négatifs
+        for j in range(0,len(ensemblePoint1)):
+            point=numpy.array([ensemblePoint1.iloc[j,:]]).T
+            if(RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1)):
+                tn+=1
+            else :
+                fp+=1
+            
+        nbDonneesPasseEnTest+=tailleChaqueBlock[i]
+    print("Nombre de True positif : ",tp)
+    print("Nombre de True negatif : ",tn)
+    print("Nombre de False positif : ",fp)
+    print("Nombre de False negatif : ",fn)
 
 """Fonction en charge de la prédiction d'un point pour ADL de SkLearn"""
 def sklLDAPredict(X,Y,point):
@@ -164,7 +229,7 @@ sklLDAPredict(X,Y,point)
 sklLogisticPredict(X,Y,point)
 ###5 Comparaison des erreurs de classification
 #LDA CODE
-print('Accuracy de ADL codée', validationCroisée(obs0,obs1),'%')
+print('Accuracy de ADL codée', validationCroiseeLOO(obs0,obs1),'%')
 #LDA SKLEARN
 validationCroiséeSklLDA(X,Y)
 #Logistique SKLEARN
@@ -200,7 +265,7 @@ sklLDAPredict(X,Y,point)
 sklLogisticPredict(X,Y,point)
 ###5 Comparaison des erreurs de classification
 #LDA CODE
-print('Accuracy de ADL codée', validationCroisée(obs0,obs1),'%')
+print('Accuracy de ADL codée', validationCroiseeLOO(obs0,obs1),'%')
 #LDA SKLEARN
 validationCroiséeSklLDA(X,Y)
 #Logistique SKLEARN
@@ -236,7 +301,7 @@ sklLDAPredict(X,Y,point)
 sklLogisticPredict(X,Y,point)
 ###5 Comparaison des erreurs de classification
 #LDA CODE
-print('Accuracy de ADL codée', validationCroisée(obs0,obs1),'%')
+print('Accuracy de ADL codée', validationCroiseeLOO(obs0,obs1),'%')
 #LDA SKLEARN
 validationCroiséeSklLDA(X,Y)
 #Logistique SKLEARN
@@ -265,6 +330,7 @@ obs1=WS.loc[WS['Revenue']==False,WS.columns!= 'Revenue']
 
 #Application de l'ADL sur le jeu de données
 moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
-print('Accuracy du Jeu de donnée choisi', validationCroisée(obs0,obs1))
+#print('Accuracy du Jeu de donnée choisi', validationCroiseeLOO(obs0,obs1))
+validationCroisee(WS,5)
 
 plt.show()
