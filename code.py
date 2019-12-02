@@ -104,16 +104,16 @@ def faireBlockTailleSemblable(nbBlock,nbObservation) :
     tailleBlock=floor(nbObservation/nbBlock)
     reste=nbObservation-(tailleBlock*nbBlock)
     tailleParBlock=[]
-    
+
     for i in range(0,nbBlock):
         tailleParBlock.append(tailleBlock)
-    
+
     cpt=0
     while(reste>0):
         tailleParBlock[cpt]+=1
         reste-=1
         cpt=(cpt+1)%nbBlock
-    
+
     return tailleParBlock
 
 def validationCroisee(WS,nbBlock) :
@@ -124,7 +124,7 @@ def validationCroisee(WS,nbBlock) :
     tp=0
     fn=0
     fp=0
-    
+
     #Chaque block passe 1 fois en test et (nbBlock-1) fois en apprentissage
     for i in range(0,nbBlock) :
         #Séparation données apprentissage/test
@@ -132,37 +132,41 @@ def validationCroisee(WS,nbBlock) :
         WSTest=WS.copy()
         WSApprentissage.drop(WSApprentissage.index.values[nbDonneesPasseEnTest:nbDonneesPasseEnTest+tailleChaqueBlock[i]],inplace=True)
         WSTest.drop(WSApprentissage.index.values,inplace=True)
-        
+
         #Séparation par classe des données d'apprentissage
-        obs0=WSApprentissage.loc[WSApprentissage['Revenue']==True,WSApprentissage.columns!= 'Revenue']
-        obs1=WSApprentissage.loc[WSApprentissage['Revenue']==False,WSApprentissage.columns!= 'Revenue']
-        moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
-        
+        obstrue=WSApprentissage.loc[WSApprentissage['Revenue']==True,WSApprentissage.columns!= 'Revenue']
+        obsfalse=WSApprentissage.loc[WSApprentissage['Revenue']==False,WSApprentissage.columns!= 'Revenue']
+        moyobstrue,moyobsfalse,pitrue,pifalse,covarianceInv=estimerParamAdl(obstrue,obsfalse)
+
         #Séparation par classe des données de test
-        ensemblePoint0=WSTest.loc[WSTest['Revenue']==True,WSTest.columns!= 'Revenue']
-        ensemblePoint1=WSTest.loc[WSTest['Revenue']==False,WSTest.columns!= 'Revenue']
-        
+        ensemblePointtrue=WSTest.loc[WSTest['Revenue']==True,WSTest.columns!= 'Revenue']
+        ensemblePointfalse=WSTest.loc[WSTest['Revenue']==False,WSTest.columns!= 'Revenue']
+
         #Calcule des positifs
-        for j in range(0,len(ensemblePoint0)):
-            point=numpy.array([ensemblePoint0.iloc[j,:]]).T
-            if(RegleDeciAdl(point,covarianceInv,moyobs0,pi0)>RegleDeciAdl(point,covarianceInv,moyobs1,pi1)):
+        for j in range(0,len(ensemblePointtrue)):
+            point=numpy.array([ensemblePointtrue.iloc[j,:]]).T
+            if(RegleDeciAdl(point,covarianceInv,moyobstrue,pitrue)>RegleDeciAdl(point,covarianceInv,moyobsfalse,pifalse)):
                 tp+=1
             else :
                 fn+=1
-        
+
         #Calcule des négatifs
-        for j in range(0,len(ensemblePoint1)):
-            point=numpy.array([ensemblePoint1.iloc[j,:]]).T
-            if(RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1)):
+        for j in range(0,len(ensemblePointfalse)):
+            point=numpy.array([ensemblePointfalse.iloc[j,:]]).T
+            if(RegleDeciAdl(point,covarianceInv,moyobstrue,pitrue)<RegleDeciAdl(point,covarianceInv,moyobsfalse,pifalse)):
                 tn+=1
             else :
                 fp+=1
-            
+
         nbDonneesPasseEnTest+=tailleChaqueBlock[i]
     print("Nombre de True positif : ",tp)
     print("Nombre de True negatif : ",tn)
     print("Nombre de False positif : ",fp)
     print("Nombre de False negatif : ",fn)
+    print("Accuracy :",((tp+tn)/(tp+tn+fp+fn))*100," %")
+    print("TPR : ",tp/(tp+fn)*100," %")
+    print("TNR : ",tn/(tn+fp)*100," %")
+
 
 """Fonction en charge de la prédiction d'un point pour ADL de SkLearn"""
 def sklLDAPredict(X,Y,point):
@@ -324,13 +328,11 @@ WS['Weekend']=WS['Weekend'].map({True: 1, False: 0})
 
 #Nettoyage du jeu de données
 WS=WS.dropna()
-
-obs0=WS.loc[WS['Revenue']==True,WS.columns!= 'Revenue']
-obs1=WS.loc[WS['Revenue']==False,WS.columns!= 'Revenue']
+obstrue=WS.loc[WS['Revenue']==True,WS.columns!= 'Revenue']
+obsfalse=WS.loc[WS['Revenue']==False,WS.columns!= 'Revenue']
 
 #Application de l'ADL sur le jeu de données
-moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obs1)
-#print('Accuracy du Jeu de donnée choisi', validationCroiseeLOO(obs0,obs1))
+moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obstrue,obsfalse)
+#print('Accuracy du Jeu de donnée choisi', validationCroiseeLOO(obstrue,obsfalse))
 validationCroisee(WS,5)
-
 plt.show()
