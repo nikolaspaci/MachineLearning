@@ -59,6 +59,7 @@ def estimerParamAdl(obs0,obs1):
     covObs1=numpy.cov(obs1.T)
 
     covSomme=Sommecovariance(covObs0,covObs1)
+    #print("Calcul déterminant",numpy.linalg.det(covSomme))
     covarianceInv=numpy.linalg.pinv(covSomme)
     return moyobs0,moyobs1,pi0,pi1,covarianceInv
 
@@ -84,21 +85,25 @@ def validationCroiseeLOO(obs0,obs1):
     nbObservation=len(obs0)+len(obs1)
     tn=0
     tp=0
-
+    fn=0
+    fp=0
     for i in range(0,len(obs0)) :
         obsMoinsUn=obs0.drop(obs0.index[i])
         moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obsMoinsUn,obs1)
         point=numpy.array([obs0.iloc[i,:]]).T
         if RegleDeciAdl(point,covarianceInv,moyobs1,pi1)<RegleDeciAdl(point,covarianceInv,moyobs0,pi0) :
             tn+=1
+        else:
+            fp+=1
     for i in range(0,len(obs1)) :
         obsMoinsUn=obs1.drop(obs1.index[i])
         moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obs0,obsMoinsUn)
         point=numpy.array([obs1.iloc[i,:]]).T
         if RegleDeciAdl(point,covarianceInv,moyobs0,pi0)<RegleDeciAdl(point,covarianceInv,moyobs1,pi1) :
             tp+=1
-
-    return ((tp+tn)/nbObservation)*100
+        else:
+            fn+=1
+    return ((tp+tn)/(tp+tn+fp+fn))*100
 
 def faireBlockTailleSemblable(nbBlock,nbObservation) :
     tailleBlock=floor(nbObservation/nbBlock)
@@ -333,6 +338,5 @@ obsfalse=WS.loc[WS['Revenue']==False,WS.columns!= 'Revenue']
 
 #Application de l'ADL sur le jeu de données
 moyobs0,moyobs1,pi0,pi1,covarianceInv=estimerParamAdl(obstrue,obsfalse)
-#print('Accuracy du Jeu de donnée choisi', validationCroiseeLOO(obstrue,obsfalse))
 validationCroisee(WS,5)
 plt.show()
